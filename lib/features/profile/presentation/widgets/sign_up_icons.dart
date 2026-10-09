@@ -82,11 +82,7 @@ class CameraPlusIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      SignUpIconAssets.cameraPlus,
-      width: size,
-      height: size,
-    );
+    return Image.asset(SignUpIconAssets.cameraPlus, width: size, height: size);
   }
 }
 
@@ -99,10 +95,6 @@ class UaeFlagIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      SignUpIconAssets.uaeFlag,
-      width: size,
-      height: size,
-    );
+    return Image.asset(SignUpIconAssets.uaeFlag, width: size, height: size);
   }
 }

@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:michell/features/profile/presentation/widgets/profile_photo_picker.dart';
 import 'package:michell/main.dart';
 
 Future<void> _loadManropeFonts() async {
@@ -75,5 +76,18 @@ void main() {
         File(screenshotPath).writeAsBytesSync(png!.buffer.asUint8List());
       });
     }
+  });
+
+  testWidgets('Tapping the profile photo offers camera and gallery', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MichellApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(ProfilePhotoPicker));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Take photo'), findsOneWidget);
+    expect(find.text('Choose from gallery'), findsOneWidget);
   });
 }

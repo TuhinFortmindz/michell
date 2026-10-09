@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -65,6 +67,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   bool _isConfirmPasswordHidden = true;
   bool _hasAcceptedTerms = false;
 
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _profilePhoto;
+
   late final List<TextEditingController> _requiredFieldControllers = [
     _firstNameController,
     _lastNameController,
@@ -102,6 +107,37 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   void _onRequiredFieldChanged() => setState(() {});
 
+  Future<void> _onProfilePhotoTap() async {
+    FocusScope.of(context).unfocus();
+    final ImageSource? photoSource = await showPhotoSourcePicker(context);
+    if (photoSource == null) return;
+
+    try {
+      final XFile? pickedPhoto = await _imagePicker.pickImage(
+        source: photoSource,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+        preferredCameraDevice: CameraDevice.front,
+      );
+      if (pickedPhoto == null || !mounted) return;
+      setState(() => _profilePhoto = File(pickedPhoto.path));
+    } on PlatformException {
+      if (!mounted) return;
+      final String sourceName = photoSource == ImageSource.camera
+          ? 'camera'
+          : 'photo library';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not open the $sourceName. '
+            'Please allow access in your device settings.',
+          ),
+        ),
+      );
+    }
+  }
+
   void _onCreateAccountPressed() {
     FocusScope.of(context).unfocus();
   }
@@ -116,10 +152,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
     // Only Android's 3-button navigation bar gets the grey Figma background.
     // iPhones (home indicator) and Android gesture navigation stay white.
-    final bool hasButtonNavigationBar =
-        defaultTargetPlatform == TargetPlatform.android &&
-        systemPadding.bottom >=
-            _CreateAccountLayout.minButtonNavigationBarHeight;
+    final bool hasButtonNavigationBar = defaultTargetPlatform == TargetPlatform.android && systemPadding.bottom >= _CreateAccountLayout.minButtonNavigationBarHeight;
 
     // Figma keeps 20 px between the button and the navigation bar. A button
     // bar needs that gap above it; the iPhone home indicator and Android
@@ -151,7 +184,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   title: 'Create an account',
                   onBackTap: () => Navigator.of(context).maybePop(),
                 ),
-                const ProfilePhotoPicker(),
+                ProfilePhotoPicker(
+                  photoFile: _profilePhoto,
+                  onTap: _onProfilePhotoTap,
+                ),
                 const SizedBox(
                   height: _CreateAccountLayout.gapAfterProfilePhoto,
                 ),
