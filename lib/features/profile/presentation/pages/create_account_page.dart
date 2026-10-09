@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -43,16 +44,22 @@ abstract final class _CreateAccountLayout {
 
   /// Space between the button and the system navigation bar.
   static const double gapBelowSubmitButton = 20;
+
+  /// Android's 3-button navigation bar is 48 dp tall, gesture navigation only
+  /// ~16-24 dp. A bottom inset at least this tall (Figma px) means buttons.
+  static const double minButtonNavigationBarHeight = 32;
 }
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _mobileNumberController = TextEditingController();
-  final TextEditingController _alternativeMobileNumberController = TextEditingController();
+  final TextEditingController _alternativeMobileNumberController =
+      TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _isPasswordHidden = true;
   bool _isConfirmPasswordHidden = true;
@@ -69,7 +76,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   bool get _canCreateAccount =>
       _hasAcceptedTerms &&
-      _requiredFieldControllers.every((controller) => controller.text.trim().isNotEmpty,);
+      _requiredFieldControllers.every(
+        (controller) => controller.text.trim().isNotEmpty,
+      );
 
   @override
   void initState() {
@@ -105,12 +114,27 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       systemPadding.top,
     );
 
+    // Only Android's 3-button navigation bar gets the grey Figma background.
+    // iPhones (home indicator) and Android gesture navigation stay white.
+    final bool hasButtonNavigationBar =
+        defaultTargetPlatform == TargetPlatform.android &&
+        systemPadding.bottom >=
+            _CreateAccountLayout.minButtonNavigationBarHeight;
+
+    // Figma keeps 20 px between the button and the navigation bar. A button
+    // bar needs that gap above it; the iPhone home indicator and Android
+    // gesture bar are thin lines at the very bottom, so 20 px from the screen
+    // edge already clears them.
+    final double bottomSpace =
+        _CreateAccountLayout.gapBelowSubmitButton +
+        (hasButtonNavigationBar ? systemPadding.bottom : 0);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
-        systemNavigationBarColor: AppColors.navigationBar,
+        systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
         systemNavigationBarContrastEnforced: false,
       ),
@@ -118,137 +142,135 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         backgroundColor: AppColors.pageBackground,
         body: Stack(
           children: [
-            Positioned.fill(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: EdgeInsets.only(
-                  top: topSpace,
-                  bottom: _CreateAccountLayout.gapBelowSubmitButton +
-                      systemPadding.bottom,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Fixed part: never scrolls.
+                SizedBox(height: topSpace),
+                SignUpHeader(
+                  title: 'Create an account',
+                  onBackTap: () => Navigator.of(context).maybePop(),
                 ),
-                child: _buildForm(context),
+                const ProfilePhotoPicker(),
+                const SizedBox(
+                  height: _CreateAccountLayout.gapAfterProfilePhoto,
+                ),
+                // Form: scrolls only when it is taller than the space left.
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(bottom: bottomSpace),
+                    child: _buildForm(),
+                  ),
+                ),
+              ],
+            ),
+            if (hasButtonNavigationBar)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: systemPadding.bottom,
+                child: const ColoredBox(color: AppColors.navigationBar),
               ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: systemPadding.bottom,
-              child: const ColoredBox(color: AppColors.navigationBar),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildForm(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SignUpHeader(
-          title: 'Create an account',
-          onBackTap: () => Navigator.of(context).maybePop(),
-        ),
-        const ProfilePhotoPicker(),
-        const SizedBox(height: _CreateAccountLayout.gapAfterProfilePhoto),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: _CreateAccountLayout.pageSidePadding,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+  Widget _buildForm() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: _CreateAccountLayout.pageSidePadding,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  SizedBox(
-                    width: _CreateAccountLayout.nameFieldWidth,
-                    child: SignUpTextField(
-                      controller: _firstNameController,
-                      hintText: '* First name',
-                      keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
-                      autofillHints: const [AutofillHints.givenName],
-                    ),
-                  ),
-                  const SizedBox(
-                    width: _CreateAccountLayout.gapBetweenNameFields,
-                  ),
-                  SizedBox(
-                    width: _CreateAccountLayout.nameFieldWidth,
-                    child: SignUpTextField(
-                      controller: _lastNameController,
-                      hintText: '* Last name',
-                      keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
-                      autofillHints: const [AutofillHints.familyName],
-                    ),
-                  ),
-                ],
-              ),
-              const _HelperTextBlock(
-                text: 'This mobile number will be used for you to Sign In\n'
-                    'and will allow us to call you upon your request',
-              ),
-              SignUpPhoneField(
-                controller: _mobileNumberController,
-                hintText: '* Mobile number (ex: 50*******)',
-              ),
-              const _HelperTextBlock(
-                text: 'Do you have an alternative mobile number for messaging?\n'
-                    '(WhatsApp or Telegram)',
-              ),
-              SignUpPhoneField(
-                controller: _alternativeMobileNumberController,
-                hintText: 'Mobile number (optional)',
-                showCountryPickerArrow: true,
-              ),
-              const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
-              SignUpTextField(
-                controller: _emailController,
-                hintText: '* Email address',
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
-              ),
-              const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
-              SignUpPasswordField(
-                controller: _passwordController,
-                hintText: '* Password',
-                isPasswordHidden: _isPasswordHidden,
-                onVisibilityToggle: () =>
-                    setState(() => _isPasswordHidden = !_isPasswordHidden),
-              ),
-              const SizedBox(
-                height: _CreateAccountLayout.gapBetweenPasswordFields,
-              ),
-              SignUpPasswordField(
-                controller: _confirmPasswordController,
-                hintText: '* Confirm password',
-                isPasswordHidden: _isConfirmPasswordHidden,
-                textInputAction: TextInputAction.done,
-                onVisibilityToggle: () => setState(
-                  () => _isConfirmPasswordHidden = !_isConfirmPasswordHidden,
+              SizedBox(
+                width: _CreateAccountLayout.nameFieldWidth,
+                child: SignUpTextField(
+                  controller: _firstNameController,
+                  hintText: '* First name',
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
+                  autofillHints: const [AutofillHints.givenName],
                 ),
               ),
-              const SizedBox(
-                height: _CreateAccountLayout.gapAfterConfirmPassword,
-              ),
-              ConsentCheckboxRow(
-                isChecked: _hasAcceptedTerms,
-                onChanged: (isChecked) =>
-                    setState(() => _hasAcceptedTerms = isChecked),
-              ),
-              PillSubmitButton(
-                label: 'Create my account',
-                isEnabled: _canCreateAccount,
-                onPressed: _onCreateAccountPressed,
+              const SizedBox(width: _CreateAccountLayout.gapBetweenNameFields),
+              SizedBox(
+                width: _CreateAccountLayout.nameFieldWidth,
+                child: SignUpTextField(
+                  controller: _lastNameController,
+                  hintText: '* Last name',
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
+                  autofillHints: const [AutofillHints.familyName],
+                ),
               ),
             ],
           ),
-        ),
-      ],
+          const _HelperTextBlock(
+            text:
+                'This mobile number will be used for you to Sign In\n'
+                'and will allow us to call you upon your request',
+          ),
+          SignUpPhoneField(
+            controller: _mobileNumberController,
+            hintText: '* Mobile number (ex: 50*******)',
+          ),
+          const _HelperTextBlock(
+            text:
+                'Do you have an alternative mobile number for messaging?\n'
+                '(WhatsApp or Telegram)',
+          ),
+          SignUpPhoneField(
+            controller: _alternativeMobileNumberController,
+            hintText: 'Mobile number (optional)',
+            showCountryPickerArrow: true,
+          ),
+          const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
+          SignUpTextField(
+            controller: _emailController,
+            hintText: '* Email address',
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+          ),
+          const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
+          SignUpPasswordField(
+            controller: _passwordController,
+            hintText: '* Password',
+            isPasswordHidden: _isPasswordHidden,
+            onVisibilityToggle: () =>
+                setState(() => _isPasswordHidden = !_isPasswordHidden),
+          ),
+          const SizedBox(height: _CreateAccountLayout.gapBetweenPasswordFields),
+          SignUpPasswordField(
+            controller: _confirmPasswordController,
+            hintText: '* Confirm password',
+            isPasswordHidden: _isConfirmPasswordHidden,
+            textInputAction: TextInputAction.done,
+            onVisibilityToggle: () => setState(
+              () => _isConfirmPasswordHidden = !_isConfirmPasswordHidden,
+            ),
+          ),
+          const SizedBox(height: _CreateAccountLayout.gapAfterConfirmPassword),
+          ConsentCheckboxRow(
+            isChecked: _hasAcceptedTerms,
+            onChanged: (isChecked) =>
+                setState(() => _hasAcceptedTerms = isChecked),
+          ),
+          PillSubmitButton(
+            label: 'Create my account',
+            isEnabled: _canCreateAccount,
+            onPressed: _onCreateAccountPressed,
+          ),
+        ],
+      ),
     );
   }
 }
