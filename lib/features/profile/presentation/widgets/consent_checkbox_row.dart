@@ -122,7 +122,11 @@ class _ConsentCheckbox extends StatelessWidget {
             children: [
               if (isChecked)
                 const Center(
-                  child: Icon(Icons.check, size: 18, color: AppColors.buttonText),
+                  child: Icon(
+                    Icons.check,
+                    size: 18,
+                    color: AppColors.buttonText,
+                  ),
                 ),
               const Positioned(
                 left: 0,

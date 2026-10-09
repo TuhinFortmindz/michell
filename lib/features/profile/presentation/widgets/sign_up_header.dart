@@ -10,8 +10,8 @@ class SignUpHeader extends StatelessWidget {
 
   static const double height = 53;
   static const double titleBaseline = 25;
-  static const double backIconLeft = 20.25;
-  static const double backIconTop = 11.75;
+  static const double backIconLeft = 15;
+  static const double backIconTop = 9.5;
   static const double backTapAreaWidth = 48;
 
   final String title;

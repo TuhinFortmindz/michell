@@ -19,8 +19,8 @@ abstract final class SignUpFieldMetrics {
 
   // Phone number fields.
   static const double flagLeft = 10;
-  static const double flagTop = 18;
-  static const double chevronLeft = 33.25;
+  static const double flagTop = 15;
+  static const double chevronLeft = 33.125;
   static const double chevronTop = 21.75;
   static const double countryCodeLeft = 46;
   static const double codeSeparatorLeft = 73.25;
@@ -30,8 +30,8 @@ abstract final class SignUpFieldMetrics {
   static const double phoneTextLeft = 86;
 
   // Password fields.
-  static const double eyeIconLeft = 306;
-  static const double eyeIconTop = 15.5;
+  static const double eyeIconLeft = 304;
+  static const double eyeIconTop = 13;
   static const double passwordTextRight = 55;
 }
 

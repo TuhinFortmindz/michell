@@ -8,25 +8,35 @@ class ProfilePhotoPicker extends StatelessWidget {
   const ProfilePhotoPicker({super.key, this.onTap});
 
   static const double diameter = 100;
+
+  /// Figma places the circle at x = 137, half a pixel left of true centre.
+  static const double leftOffset = 137;
   static const double ringWidth = 2;
 
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: diameter,
-          height: diameter,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.avatarFill,
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.brandPurple, width: ringWidth),
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: leftOffset),
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: diameter,
+            height: diameter,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.avatarFill,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.brandPurple,
+                width: ringWidth,
+              ),
+            ),
+            child: const CameraPlusIcon(),
           ),
-          child: const CameraPlusIcon(),
         ),
       ),
     );

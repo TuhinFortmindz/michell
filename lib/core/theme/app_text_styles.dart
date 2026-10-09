@@ -58,9 +58,7 @@ abstract final class AppTextStyles {
     color: AppColors.bodyText,
   );
 
-  static const TextStyle consentLink = TextStyle(
-    color: AppColors.brandPurple,
-  );
+  static const TextStyle consentLink = TextStyle(color: AppColors.brandPurple);
 
   static const TextStyle primaryButton = TextStyle(
     fontFamily: fontFamily,

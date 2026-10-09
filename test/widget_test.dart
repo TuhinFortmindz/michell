@@ -11,11 +11,26 @@ import 'package:michell/main.dart';
 Future<void> _loadManropeFonts() async {
   final FontLoader manrope = FontLoader('Manrope');
   for (final String weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
-    final Uint8List bytes =
-        File('assets/fonts/Manrope-$weight.ttf').readAsBytesSync();
+    final Uint8List bytes = File(
+      'assets/fonts/Manrope-$weight.ttf',
+    ).readAsBytesSync();
     manrope.addFont(Future.value(ByteData.sublistView(bytes)));
   }
   await manrope.load();
+
+  // The back arrow is a CupertinoIcons glyph.
+  final String cupertinoFontPath =
+      '${Platform.environment['HOME']}/.pub-cache/hosted/pub.dev/'
+      'cupertino_icons-1.0.9/assets/CupertinoIcons.ttf';
+  if (File(cupertinoFontPath).existsSync()) {
+    final FontLoader cupertinoIcons =
+        FontLoader('packages/cupertino_icons/CupertinoIcons')..addFont(
+          Future.value(
+            ByteData.sublistView(File(cupertinoFontPath).readAsBytesSync()),
+          ),
+        );
+    await cupertinoIcons.load();
+  }
 }
 
 void main() {
@@ -30,6 +45,12 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(const MichellApp());
+    // PNG assets decode asynchronously; load them before checking the frame.
+    await tester.runAsync(() async {
+      for (final Element image in find.byType(Image).evaluate()) {
+        await precacheImage((image.widget as Image).image, image);
+      }
+    });
     await tester.pumpAndSettle();
 
     expect(find.text('Create an account'), findsOneWidget);
@@ -48,8 +69,9 @@ void main() {
           renderObject.paintBounds,
           pixelRatio: 4,
         );
-        final ByteData? png =
-            await image.toByteData(format: ui.ImageByteFormat.png);
+        final ByteData? png = await image.toByteData(
+          format: ui.ImageByteFormat.png,
+        );
         File(screenshotPath).writeAsBytesSync(png!.buffer.asUint8List());
       });
     }
