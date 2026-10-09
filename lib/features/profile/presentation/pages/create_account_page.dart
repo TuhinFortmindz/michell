@@ -53,6 +53,25 @@ abstract final class _CreateAccountLayout {
   static const double minButtonNavigationBarHeight = 32;
 }
 
+/// Reasons "Create my account" is still disabled, in the order of the form.
+enum _SignUpProblem {
+  firstNameMissing('Enter your first name'),
+  lastNameMissing('Enter your last name'),
+  mobileNumberInvalid('Enter a 9-digit mobile number'),
+  alternativeMobileNumberInvalid(
+    'The alternative mobile number must have 9 digits',
+  ),
+  emailInvalid('Enter a valid email address'),
+  passwordMissing('Enter a password'),
+  confirmPasswordMissing('Confirm your password'),
+  passwordsDoNotMatch('Passwords do not match'),
+  termsNotAccepted('Tick the box to accept the policies');
+
+  const _SignUpProblem(this.message);
+
+  final String message;
+}
+
 class _CreateAccountPageState extends State<CreateAccountPage> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
@@ -71,28 +90,79 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _profilePhoto;
 
-  late final List<TextEditingController> _requiredFieldControllers = [
+  /// Becomes true the first time the disabled button is pressed; from then on
+  /// fields that block the button are underlined in red until fixed.
+  bool _showsFieldErrors = false;
+
+  // Used to scroll to the first field that needs fixing.
+  final GlobalKey _nameFieldsKey = GlobalKey();
+  final GlobalKey _mobileNumberFieldKey = GlobalKey();
+  final GlobalKey _alternativeMobileNumberFieldKey = GlobalKey();
+  final GlobalKey _emailFieldKey = GlobalKey();
+  final GlobalKey _passwordFieldKey = GlobalKey();
+  final GlobalKey _confirmPasswordFieldKey = GlobalKey();
+  final GlobalKey _consentRowKey = GlobalKey();
+
+  late final List<TextEditingController> _allFieldControllers = [
     _firstNameController,
     _lastNameController,
     _mobileNumberController,
+    _alternativeMobileNumberController,
     _emailController,
     _passwordController,
     _confirmPasswordController,
   ];
 
-  bool get _canCreateAccount =>
-      _hasAcceptedTerms &&
-      _requiredFieldControllers.every(
-        (controller) => controller.text.trim().isNotEmpty,
-      ) &&
-      InputValidators.isValidUaeMobileNumber(_mobileNumberController.text) &&
-      InputValidators.isValidEmail(_emailController.text);
+  List<_SignUpProblem> get _problems {
+    final String alternativeMobileNumber =
+        _alternativeMobileNumberController.text;
+    final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
+
+    return [
+      if (_firstNameController.text.trim().isEmpty)
+        _SignUpProblem.firstNameMissing,
+      if (_lastNameController.text.trim().isEmpty)
+        _SignUpProblem.lastNameMissing,
+      if (!InputValidators.isValidUaeMobileNumber(_mobileNumberController.text))
+        _SignUpProblem.mobileNumberInvalid,
+      if (alternativeMobileNumber.isNotEmpty &&
+          !InputValidators.isValidUaeMobileNumber(alternativeMobileNumber))
+        _SignUpProblem.alternativeMobileNumberInvalid,
+      if (!InputValidators.isValidEmail(_emailController.text))
+        _SignUpProblem.emailInvalid,
+      if (password.isEmpty) _SignUpProblem.passwordMissing,
+      if (confirmPassword.isEmpty) _SignUpProblem.confirmPasswordMissing,
+      if (password.isNotEmpty &&
+          confirmPassword.isNotEmpty &&
+          password != confirmPassword)
+        _SignUpProblem.passwordsDoNotMatch,
+      if (!_hasAcceptedTerms) _SignUpProblem.termsNotAccepted,
+    ];
+  }
+
+  /// True when [problem] should currently be shown as a red underline.
+  bool _showsError(List<_SignUpProblem> problems, _SignUpProblem problem) =>
+      _showsFieldErrors && problems.contains(problem);
+
+  GlobalKey _fieldKeyFor(_SignUpProblem problem) => switch (problem) {
+    _SignUpProblem.firstNameMissing ||
+    _SignUpProblem.lastNameMissing => _nameFieldsKey,
+    _SignUpProblem.mobileNumberInvalid => _mobileNumberFieldKey,
+    _SignUpProblem.alternativeMobileNumberInvalid =>
+      _alternativeMobileNumberFieldKey,
+    _SignUpProblem.emailInvalid => _emailFieldKey,
+    _SignUpProblem.passwordMissing => _passwordFieldKey,
+    _SignUpProblem.confirmPasswordMissing ||
+    _SignUpProblem.passwordsDoNotMatch => _confirmPasswordFieldKey,
+    _SignUpProblem.termsNotAccepted => _consentRowKey,
+  };
 
   @override
   void initState() {
     super.initState();
-    for (final TextEditingController controller in _requiredFieldControllers) {
-      controller.addListener(_onRequiredFieldChanged);
+    for (final TextEditingController controller in _allFieldControllers) {
+      controller.addListener(_onFieldChanged);
     }
   }
 
@@ -108,7 +178,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     super.dispose();
   }
 
-  void _onRequiredFieldChanged() => setState(() {});
+  void _onFieldChanged() => setState(() {});
 
   Future<void> _onProfilePhotoTap() async {
     FocusScope.of(context).unfocus();
@@ -143,6 +213,45 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   void _onCreateAccountPressed() {
     FocusScope.of(context).unfocus();
+  }
+
+  /// The grey button was pressed: underline the blocking fields in red, list
+  /// what is missing and scroll to the first field that needs fixing.
+  void _onDisabledCreateAccountPressed() {
+    final List<_SignUpProblem> problems = _problems;
+    if (problems.isEmpty) return;
+
+    FocusScope.of(context).unfocus();
+    setState(() => _showsFieldErrors = true);
+
+    final BuildContext? firstProblemField = _fieldKeyFor(
+      problems.first,
+    ).currentContext;
+    if (firstProblemField != null) {
+      Scrollable.ensureVisible(
+        firstProblemField,
+        alignment: 0.2,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.bodyText,
+        content: Text(
+          [
+            'Please complete the following:',
+            for (final _SignUpProblem problem in problems)
+              '•  ${problem.message}',
+          ].join('\n'),
+          style: AppTextStyles.snackBarMessage,
+        ),
+      ),
+    );
   }
 
   @override
@@ -226,6 +335,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   }
 
   Widget _buildForm() {
+    final List<_SignUpProblem> problems = _problems;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: _CreateAccountLayout.pageSidePadding,
@@ -234,10 +345,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            key: _nameFieldsKey,
             children: [
               SizedBox(
                 width: _CreateAccountLayout.nameFieldWidth,
                 child: SignUpTextField(
+                  hasError: _showsError(
+                    problems,
+                    _SignUpProblem.firstNameMissing,
+                  ),
                   controller: _firstNameController,
                   hintText: '* First name',
                   keyboardType: TextInputType.name,
@@ -249,6 +365,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               SizedBox(
                 width: _CreateAccountLayout.nameFieldWidth,
                 child: SignUpTextField(
+                  hasError: _showsError(
+                    problems,
+                    _SignUpProblem.lastNameMissing,
+                  ),
                   controller: _lastNameController,
                   hintText: '* Last name',
                   keyboardType: TextInputType.name,
@@ -264,6 +384,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 'and will allow us to call you upon your request',
           ),
           SignUpPhoneField(
+            key: _mobileNumberFieldKey,
+            hasError: _showsError(problems, _SignUpProblem.mobileNumberInvalid),
             controller: _mobileNumberController,
             hintText: '* Mobile number (ex: 50*******)',
             floatingLabelText: '* Mobile number',
@@ -274,6 +396,11 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 '(WhatsApp or Telegram)',
           ),
           SignUpPhoneField(
+            key: _alternativeMobileNumberFieldKey,
+            hasError: _showsError(
+              problems,
+              _SignUpProblem.alternativeMobileNumberInvalid,
+            ),
             controller: _alternativeMobileNumberController,
             hintText: 'Mobile number (optional)',
             showCountryPickerArrow: true,
@@ -282,6 +409,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
           const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
           SignUpTextField(
+            key: _emailFieldKey,
+            hasError: _showsError(problems, _SignUpProblem.emailInvalid),
             controller: _emailController,
             hintText: '* Email address',
             showVerifiedTickWhen: InputValidators.isValidEmail,
@@ -290,6 +419,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
           const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
           SignUpPasswordField(
+            key: _passwordFieldKey,
+            hasError: _showsError(problems, _SignUpProblem.passwordMissing),
             controller: _passwordController,
             hintText: '* Password',
             isPasswordHidden: _isPasswordHidden,
@@ -298,6 +429,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
           const SizedBox(height: _CreateAccountLayout.gapBetweenPasswordFields),
           SignUpPasswordField(
+            key: _confirmPasswordFieldKey,
+            hasError:
+                _showsError(problems, _SignUpProblem.confirmPasswordMissing) ||
+                _showsError(problems, _SignUpProblem.passwordsDoNotMatch),
             controller: _confirmPasswordController,
             hintText: '* Confirm password',
             isPasswordHidden: _isConfirmPasswordHidden,
@@ -308,14 +443,17 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           ),
           const SizedBox(height: _CreateAccountLayout.gapAfterConfirmPassword),
           ConsentCheckboxRow(
+            key: _consentRowKey,
+            hasError: _showsError(problems, _SignUpProblem.termsNotAccepted),
             isChecked: _hasAcceptedTerms,
             onChanged: (isChecked) =>
                 setState(() => _hasAcceptedTerms = isChecked),
           ),
           PillSubmitButton(
             label: 'Create my account',
-            isEnabled: _canCreateAccount,
+            isEnabled: problems.isEmpty,
             onPressed: _onCreateAccountPressed,
+            onDisabledPressed: _onDisabledCreateAccountPressed,
           ),
         ],
       ),

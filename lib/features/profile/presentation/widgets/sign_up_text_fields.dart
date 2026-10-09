@@ -88,9 +88,16 @@ class _VerifiedTickWhenValid extends StatelessWidget {
 
 /// Light rounded box with a grey underline, used behind every input.
 class SignUpFieldBox extends StatelessWidget {
-  const SignUpFieldBox({super.key, required this.children});
+  const SignUpFieldBox({
+    super.key,
+    required this.children,
+    this.hasError = false,
+  });
 
   final List<Widget> children;
+
+  /// Turns the underline red.
+  final bool hasError;
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +110,16 @@ class SignUpFieldBox extends StatelessWidget {
           child: Stack(
             children: [
               ...children,
-              const Positioned(
+              Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 height: SignUpFieldMetrics.underlineThickness,
-                child: ColoredBox(color: AppColors.fieldUnderline),
+                child: ColoredBox(
+                  color: hasError
+                      ? AppColors.fieldError
+                      : AppColors.fieldUnderline,
+                ),
               ),
             ],
           ),
@@ -276,6 +287,7 @@ class _FloatingLabelInput extends StatelessWidget {
 class SignUpTextField extends StatelessWidget {
   const SignUpTextField({
     super.key,
+    this.hasError = false,
     required this.controller,
     required this.hintText,
     this.floatingLabelText,
@@ -297,11 +309,15 @@ class SignUpTextField extends StatelessWidget {
   /// When set, a verified tick is shown while this check passes.
   final FieldValueCheck? showVerifiedTickWhen;
 
+  /// Turns the underline red (field blocks "Create my account").
+  final bool hasError;
+
   @override
   Widget build(BuildContext context) {
     final FieldValueCheck? isValueValid = showVerifiedTickWhen;
 
     return SignUpFieldBox(
+      hasError: hasError,
       children: [
         Positioned.fill(
           child: _FloatingLabelInput(
@@ -333,6 +349,7 @@ class SignUpTextField extends StatelessWidget {
 class SignUpPasswordField extends StatelessWidget {
   const SignUpPasswordField({
     super.key,
+    this.hasError = false,
     required this.controller,
     required this.hintText,
     required this.isPasswordHidden,
@@ -346,9 +363,13 @@ class SignUpPasswordField extends StatelessWidget {
   final VoidCallback onVisibilityToggle;
   final TextInputAction textInputAction;
 
+  /// Turns the underline red (field blocks "Create my account").
+  final bool hasError;
+
   @override
   Widget build(BuildContext context) {
     return SignUpFieldBox(
+      hasError: hasError,
       children: [
         Positioned.fill(
           child: _FloatingLabelInput(
@@ -382,6 +403,7 @@ class SignUpPasswordField extends StatelessWidget {
 class SignUpPhoneField extends StatelessWidget {
   const SignUpPhoneField({
     super.key,
+    this.hasError = false,
     required this.controller,
     required this.hintText,
     this.floatingLabelText,
@@ -401,9 +423,13 @@ class SignUpPhoneField extends StatelessWidget {
   final VoidCallback? onCountryCodeTap;
   final double verifiedTickTop;
 
+  /// Turns the underline red (field blocks "Create my account").
+  final bool hasError;
+
   @override
   Widget build(BuildContext context) {
     return SignUpFieldBox(
+      hasError: hasError,
       children: [
         const Positioned(
           left: SignUpFieldMetrics.flagLeft,

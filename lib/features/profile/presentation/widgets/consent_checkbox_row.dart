@@ -11,6 +11,7 @@ class ConsentCheckboxRow extends StatefulWidget {
     super.key,
     required this.isChecked,
     required this.onChanged,
+    this.hasError = false,
     this.onTermsOfServiceTap,
     this.onPrivacyPolicyTap,
     this.onPaymentPolicyTap,
@@ -23,6 +24,9 @@ class ConsentCheckboxRow extends StatefulWidget {
 
   final bool isChecked;
   final ValueChanged<bool> onChanged;
+
+  /// Turns the checkbox underline red (consent blocks "Create my account").
+  final bool hasError;
   final VoidCallback? onTermsOfServiceTap;
   final VoidCallback? onPrivacyPolicyTap;
   final VoidCallback? onPaymentPolicyTap;
@@ -61,7 +65,10 @@ class _ConsentCheckboxRowState extends State<ConsentCheckboxRow> {
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: () => widget.onChanged(!widget.isChecked),
-              child: _ConsentCheckbox(isChecked: widget.isChecked),
+              child: _ConsentCheckbox(
+                isChecked: widget.isChecked,
+                hasError: widget.hasError,
+              ),
             ),
           ),
           Positioned(
@@ -106,9 +113,10 @@ class _ConsentCheckboxRowState extends State<ConsentCheckboxRow> {
 }
 
 class _ConsentCheckbox extends StatelessWidget {
-  const _ConsentCheckbox({required this.isChecked});
+  const _ConsentCheckbox({required this.isChecked, required this.hasError});
 
   final bool isChecked;
+  final bool hasError;
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +136,16 @@ class _ConsentCheckbox extends StatelessWidget {
                     color: AppColors.buttonText,
                   ),
                 ),
-              const Positioned(
+              Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 height: SignUpFieldMetrics.underlineThickness,
-                child: ColoredBox(color: AppColors.fieldUnderline),
+                child: ColoredBox(
+                  color: hasError
+                      ? AppColors.fieldError
+                      : AppColors.fieldUnderline,
+                ),
               ),
             ],
           ),

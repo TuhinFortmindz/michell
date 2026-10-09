@@ -84,4 +84,12 @@ abstract final class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.buttonText,
   );
+
+  static const TextStyle snackBarMessage = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+    height: 1.5,
+    color: AppColors.buttonText,
+  );
 }

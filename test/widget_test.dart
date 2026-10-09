@@ -7,7 +7,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:michell/features/profile/presentation/widgets/profile_photo_picker.dart';
+import 'package:michell/core/theme/app_colors.dart';
 import 'package:michell/features/profile/presentation/widgets/sign_up_icons.dart';
+import 'package:michell/features/profile/presentation/widgets/sign_up_text_fields.dart';
 import 'package:michell/main.dart';
 
 Future<void> _loadManropeFonts() async {
@@ -182,5 +184,63 @@ void main() {
       find.descendant(of: mobileField, matching: find.byType(EditableText)),
     );
     expect(editableText.widget.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('Pressing the grey button lists what is missing', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MichellApp());
+    await tester.pumpAndSettle();
+
+    final Finder fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Michell');
+    await tester.enterText(fields.at(2), '99123');
+    await tester.enterText(fields.at(5), 'secret123');
+    await tester.enterText(fields.at(6), 'secret124');
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Create my account'));
+    await tester.tap(find.text('Create my account'));
+    await tester.pumpAndSettle();
+
+    for (final String message in [
+      'Enter your last name',
+      'Enter a 9-digit mobile number',
+      'Enter a valid email address',
+      'Passwords do not match',
+      'Tick the box to accept the policies',
+    ]) {
+      expect(find.textContaining(message), findsOneWidget, reason: message);
+    }
+    expect(find.textContaining('Enter your first name'), findsNothing);
+    expect(find.textContaining('Enter a password'), findsNothing);
+
+    // Red underlines on the blocking fields only.
+    Color underlineOf(Finder field) {
+      final Finder fieldBox = find.ancestor(
+        of: field,
+        matching: find.byType(SignUpFieldBox),
+      );
+      return tester
+          .widget<ColoredBox>(
+            find
+                .descendant(of: fieldBox, matching: find.byType(ColoredBox))
+                .last,
+          )
+          .color;
+    }
+
+    expect(underlineOf(fields.at(0)), AppColors.fieldUnderline);
+    expect(underlineOf(fields.at(1)), AppColors.fieldError);
+    expect(underlineOf(fields.at(2)), AppColors.fieldError);
+    expect(underlineOf(fields.at(6)), AppColors.fieldError);
+
+    // Fixing a field clears its red underline straight away.
+    await tester.enterText(fields.at(1), 'Doe');
+    await tester.pump();
+    expect(underlineOf(fields.at(1)), AppColors.fieldUnderline);
   });
 }

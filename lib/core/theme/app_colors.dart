@@ -13,6 +13,9 @@ abstract final class AppColors {
   static const Color buttonText = Color(0xFFFFFFFF);
   static const Color navigationBar = Color(0xFFF2F2F2);
 
+  /// Underline of a field that blocks "Create my account" (not in Figma).
+  static const Color fieldError = Color(0xFFD92D20);
+
   static const Color uaeFlagRed = Color(0xFFED1C24);
   static const Color uaeFlagGreen = Color(0xFF127A07);
   static const Color uaeFlagWhite = Color(0xFFE6E7E8);
