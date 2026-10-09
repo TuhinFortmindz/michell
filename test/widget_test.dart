@@ -90,4 +90,44 @@ void main() {
     expect(find.text('Take photo'), findsOneWidget);
     expect(find.text('Choose from gallery'), findsOneWidget);
   });
+
+  testWidgets('Keyboard stays open while typing into every field', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MichellApp());
+    await tester.pumpAndSettle();
+
+    final Finder textFields = find.byType(TextField);
+    for (int index = 0; index < textFields.evaluate().length; index++) {
+      await tester.ensureVisible(textFields.at(index));
+      await tester.pumpAndSettle();
+      await tester.tap(textFields.at(index));
+      await tester.pump();
+
+      String typedText = '';
+      for (final String character in ['5', '0', '1']) {
+        typedText += character;
+        tester.testTextInput.updateEditingValue(
+          TextEditingValue(
+            text: typedText,
+            selection: TextSelection.collapsed(offset: typedText.length),
+          ),
+        );
+        await tester.pump();
+
+        final EditableTextState editableText = tester.state(
+          find.descendant(
+            of: textFields.at(index),
+            matching: find.byType(EditableText),
+          ),
+        );
+        expect(editableText.widget.focusNode.hasFocus, isTrue);
+        expect(tester.testTextInput.isVisible, isTrue);
+        expect(editableText.textEditingValue.text, typedText);
+      }
+    }
+  });
 }

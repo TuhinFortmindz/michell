@@ -214,23 +214,11 @@ class _FloatingLabelInput extends StatelessWidget {
         return Stack(
           clipBehavior: Clip.none,
           children: [
-            if (hasValue)
-              Positioned(
-                left: layout.left,
-                right: textRight,
-                top: 0,
-                child: Baseline(
-                  baseline: layout.floatingLabelBaseline,
-                  baselineType: TextBaseline.alphabetic,
-                  child: Text(
-                    floatingLabelText,
-                    style: AppTextStyles.fieldFloatingLabel,
-                    maxLines: 1,
-                    softWrap: false,
-                  ),
-                ),
-              ),
+            // Keep the input first, with a key: inserting the label before it
+            // would recreate the TextField, drop its focus and close the
+            // keyboard on the first typed character.
             Positioned(
+              key: const ValueKey('input'),
               left: inputLeft,
               right: textRight,
               top: 0,
@@ -261,6 +249,22 @@ class _FloatingLabelInput extends StatelessWidget {
                 ),
               ),
             ),
+            if (hasValue)
+              Positioned(
+                left: layout.left,
+                right: textRight,
+                top: 0,
+                child: Baseline(
+                  baseline: layout.floatingLabelBaseline,
+                  baselineType: TextBaseline.alphabetic,
+                  child: Text(
+                    floatingLabelText,
+                    style: AppTextStyles.fieldFloatingLabel,
+                    maxLines: 1,
+                    softWrap: false,
+                  ),
+                ),
+              ),
           ],
         );
       },
