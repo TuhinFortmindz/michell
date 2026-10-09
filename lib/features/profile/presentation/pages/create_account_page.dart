@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/input_validators.dart';
 import '../widgets/consent_checkbox_row.dart';
 import '../widgets/pill_submit_button.dart';
 import '../widgets/profile_photo_picker.dart';
@@ -83,7 +84,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       _hasAcceptedTerms &&
       _requiredFieldControllers.every(
         (controller) => controller.text.trim().isNotEmpty,
-      );
+      ) &&
+      InputValidators.isValidUaeMobileNumber(_mobileNumberController.text) &&
+      InputValidators.isValidEmail(_emailController.text);
 
   @override
   void initState() {
@@ -152,7 +155,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
     // Only Android's 3-button navigation bar gets the grey Figma background.
     // iPhones (home indicator) and Android gesture navigation stay white.
-    final bool hasButtonNavigationBar = defaultTargetPlatform == TargetPlatform.android && systemPadding.bottom >= _CreateAccountLayout.minButtonNavigationBarHeight;
+    final bool hasButtonNavigationBar =
+        defaultTargetPlatform == TargetPlatform.android &&
+        systemPadding.bottom >=
+            _CreateAccountLayout.minButtonNavigationBarHeight;
 
     // Figma keeps 20 px between the button and the navigation bar. A button
     // bar needs that gap above it; the iPhone home indicator and Android
@@ -258,6 +264,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
           SignUpPhoneField(
             controller: _mobileNumberController,
             hintText: '* Mobile number (ex: 50*******)',
+            floatingLabelText: '* Mobile number',
           ),
           const _HelperTextBlock(
             text:
@@ -268,11 +275,14 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             controller: _alternativeMobileNumberController,
             hintText: 'Mobile number (optional)',
             showCountryPickerArrow: true,
+            verifiedTickTop:
+                SignUpFieldMetrics.alternativeMobileVerifiedTickTop,
           ),
           const SizedBox(height: _CreateAccountLayout.gapBetweenFields),
           SignUpTextField(
             controller: _emailController,
             hintText: '* Email address',
+            showVerifiedTickWhen: InputValidators.isValidEmail,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
           ),

@@ -7,7 +7,6 @@ abstract final class AppColors {
   static const Color fieldBackground = Color(0xFFFBFAFD);
   static const Color fieldUnderline = Color(0xFFD0CECE);
   static const Color hintGrey = Color(0xFF7F7F7F);
-  static const Color inputText = Color(0xFF000000);
   static const Color bodyText = Color(0xFF000000);
   static const Color avatarFill = Color(0xFFE7E6E6);
   static const Color buttonDisabled = Color(0xFFD0CECE);

@@ -26,11 +26,29 @@ abstract final class AppTextStyles {
     color: AppColors.hintGrey,
   );
 
-  static const TextStyle fieldInput = TextStyle(
+  /// Small label shown above a field once it has a value.
+  static const TextStyle fieldFloatingLabel = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    color: AppColors.hintGrey,
+  );
+
+  /// Value typed into a field.
+  static const TextStyle fieldValue = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: AppColors.inputText,
+    fontWeight: FontWeight.w700,
+    color: AppColors.brandPurple,
+  );
+
+  /// Hidden password: Manrope's bullet sized to 5.5 px dots, 11.06 px apart.
+  static const TextStyle passwordDots = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 19.4,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -2.59,
+    color: AppColors.brandPurple,
   );
 
   static const TextStyle countryCode = TextStyle(

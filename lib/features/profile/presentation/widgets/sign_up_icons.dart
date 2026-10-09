@@ -11,6 +11,7 @@ abstract final class SignUpIconAssets {
   static const String eyeOff = 'assets/icons/eye_off.svg';
   static const String cameraPlus = 'assets/images/camera.png';
   static const String uaeFlag = 'assets/images/uaeFlag.png';
+  static const String verifiedTick = 'assets/images/verifyTick.png';
 }
 
 /// iOS thin left chevron used as the header back button.
@@ -96,5 +97,22 @@ class UaeFlagIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Image.asset(SignUpIconAssets.uaeFlag, width: size, height: size);
+  }
+}
+
+/// Purple verified badge with a white tick (24 x 24 px, Figma export).
+class VerifiedTickIcon extends StatelessWidget {
+  const VerifiedTickIcon({super.key});
+
+  static const double size = 24;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      SignUpIconAssets.verifiedTick,
+      width: size,
+      height: size,
+      filterQuality: FilterQuality.medium,
+    );
   }
 }
