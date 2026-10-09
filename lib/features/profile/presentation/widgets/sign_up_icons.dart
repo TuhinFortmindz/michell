@@ -9,6 +9,7 @@ abstract final class SignUpIconAssets {
   static const String countryCodeArrow = 'assets/images/Country-codeArrow.png';
   static const String eye = 'assets/images/Eye.png';
   static const String eyeOff = 'assets/icons/eye_off.svg';
+  static const String editPhotoBadge = 'assets/images/editpenicon.png';
   static const String cameraPlus = 'assets/images/camera.png';
   static const String uaeFlag = 'assets/images/uaeFlag.png';
   static const String verifiedTick = 'assets/images/verifyTick.png';
@@ -110,6 +111,24 @@ class VerifiedTickIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Image.asset(
       SignUpIconAssets.verifiedTick,
+      width: size,
+      height: size,
+      filterQuality: FilterQuality.medium,
+    );
+  }
+}
+
+/// White circle with a purple ring and pencil (22 x 22 px, Figma export),
+/// shown on the profile photo once one is chosen.
+class EditPhotoBadgeIcon extends StatelessWidget {
+  const EditPhotoBadgeIcon({super.key});
+
+  static const double size = 22;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      SignUpIconAssets.editPhotoBadge,
       width: size,
       height: size,
       filterQuality: FilterQuality.medium,

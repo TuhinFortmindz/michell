@@ -21,6 +21,11 @@ class ProfilePhotoPicker extends StatelessWidget {
   static const double leftOffset = 137;
   static const double ringWidth = 2;
 
+  // "Edit" badge shown once a photo is chosen (measured on the filled Figma
+  // frame, relative to the top-left of the photo circle).
+  static const double editBadgeLeft = 76.5;
+  static const double editBadgeTop = 76.1;
+
   final File? photoFile;
   final VoidCallback? onTap;
 
@@ -34,32 +39,43 @@ class ProfilePhotoPicker extends StatelessWidget {
         padding: const EdgeInsets.only(left: leftOffset),
         child: GestureDetector(
           onTap: onTap,
-          child: Container(
-            width: diameter,
-            height: diameter,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppColors.avatarFill,
-              shape: BoxShape.circle,
-            ),
-            // The ring is painted on top so the photo never covers it.
-            foregroundDecoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.brandPurple,
-                width: ringWidth,
-              ),
-            ),
-            child: selectedPhoto == null
-                ? const CameraPlusIcon()
-                : ClipOval(
-                    child: Image.file(
-                      selectedPhoto,
-                      width: diameter,
-                      height: diameter,
-                      fit: BoxFit.cover,
-                    ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: diameter,
+                height: diameter,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: AppColors.avatarFill,
+                  shape: BoxShape.circle,
+                ),
+                // The ring is painted on top so the photo never covers it.
+                foregroundDecoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.brandPurple,
+                    width: ringWidth,
                   ),
+                ),
+                child: selectedPhoto == null
+                    ? const CameraPlusIcon()
+                    : ClipOval(
+                        child: Image.file(
+                          selectedPhoto,
+                          width: diameter,
+                          height: diameter,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+              ),
+              if (selectedPhoto != null)
+                const Positioned(
+                  left: editBadgeLeft,
+                  top: editBadgeTop,
+                  child: EditPhotoBadgeIcon(),
+                ),
+            ],
           ),
         ),
       ),

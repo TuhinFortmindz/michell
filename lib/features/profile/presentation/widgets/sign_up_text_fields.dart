@@ -411,10 +411,17 @@ class SignUpPhoneField extends StatelessWidget {
           child: UaeFlagIcon(),
         ),
         if (showCountryPickerArrow)
-          const Positioned(
+          Positioned(
             left: SignUpFieldMetrics.chevronLeft,
             top: SignUpFieldMetrics.chevronTop,
-            child: ChevronDownIcon(),
+            // The arrow hides while the verified tick is showing.
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, _) =>
+                  InputValidators.isValidUaeMobileNumber(value.text)
+                  ? const SizedBox.shrink()
+                  : const ChevronDownIcon(),
+            ),
           ),
         Positioned(
           left: SignUpFieldMetrics.countryCodeLeft,

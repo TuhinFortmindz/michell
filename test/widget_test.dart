@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:michell/features/profile/presentation/widgets/profile_photo_picker.dart';
+import 'package:michell/features/profile/presentation/widgets/sign_up_icons.dart';
 import 'package:michell/main.dart';
 
 Future<void> _loadManropeFonts() async {
@@ -129,5 +130,30 @@ void main() {
         expect(editableText.textEditingValue.text, typedText);
       }
     }
+  });
+
+  testWidgets('Country arrow hides once the optional number is verified', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    tester.view.physicalSize = const Size(393 * 3, 852 * 3);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MichellApp());
+    await tester.pumpAndSettle();
+
+    final Finder alternativeMobileField = find.byType(TextField).at(3);
+    expect(find.byType(ChevronDownIcon), findsOneWidget);
+
+    await tester.enterText(alternativeMobileField, '99123456');
+    await tester.pump();
+    expect(find.byType(ChevronDownIcon), findsOneWidget);
+
+    await tester.enterText(alternativeMobileField, '991234567');
+    await tester.pump();
+    expect(find.byType(ChevronDownIcon), findsNothing);
+
+    await tester.enterText(alternativeMobileField, '9912345');
+    await tester.pump();
+    expect(find.byType(ChevronDownIcon), findsOneWidget);
   });
 }
