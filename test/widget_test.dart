@@ -156,4 +156,31 @@ void main() {
     await tester.pump();
     expect(find.byType(ChevronDownIcon), findsOneWidget);
   });
+
+  testWidgets('Scrolling the form keeps the keyboard open', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 2;
+    tester.view.physicalSize = const Size(375 * 2, 667 * 2);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MichellApp());
+    await tester.pumpAndSettle();
+
+    final Finder mobileField = find.byType(TextField).at(2);
+    await tester.tap(mobileField);
+    await tester.pump();
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -150),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.testTextInput.isVisible, isTrue);
+    final EditableTextState editableText = tester.state(
+      find.descendant(of: mobileField, matching: find.byType(EditableText)),
+    );
+    expect(editableText.widget.focusNode.hasFocus, isTrue);
+  });
 }

@@ -201,8 +201,10 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
+                    // Keep the keyboard open while scrolling to the next
+                    // field.
                     keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
+                        ScrollViewKeyboardDismissBehavior.manual,
                     padding: EdgeInsets.only(bottom: bottomSpace),
                     child: _buildForm(),
                   ),
